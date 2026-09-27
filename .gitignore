@@ -1,0 +1,6 @@
+# Secrets / local overrides
+.bash_aliases.local
+
+# Termux runtime
+*.log
+.termux/termux.properties.bak
