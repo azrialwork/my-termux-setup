@@ -1,0 +1,22 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "provider": {
+    "geraikita": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Geraikita AI",
+      "options": {
+        "baseURL": "https://ai.geraikita.com/v1",
+        "apiKey": "{env:GERAIKITA_API_KEY}"
+      },
+      "models": {
+        "deepseek-v4.1-flash": { "name": "DeepSeek V4.1 Flash" },
+        "deepseek-v4-pro": { "name": "DeepSeek V4 Pro" }
+      }
+    }
+  },
+  "plugin": [
+    "@dietrichgebert/ponytail"
+  ]
+
+}
