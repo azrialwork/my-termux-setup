@@ -45,8 +45,8 @@ GIT_EMAIL=$(git config --global user.email 2>/dev/null || true)
 GIT_BRANCH=$(git config --global init.defaultBranch 2>/dev/null || true)
 
 if [ -n "$GIT_NAME" ] && [ -n "$GIT_EMAIL" ] && [ -n "$GIT_BRANCH" ]; then
-  grn "$GIT_NAME <$GIT_EMAIL>"
-  grn "Branch: $GIT_BRANCH"
+  grn "  $GIT_NAME <$GIT_EMAIL>"
+  grn "  Branch: $GIT_BRANCH"
 else
   exec 3>&1
   GIT_VALS=$(dialog --clear --title "Git Config" \
