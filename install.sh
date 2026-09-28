@@ -46,7 +46,7 @@ GIT_BRANCH=$(git config --global init.defaultBranch 2>/dev/null || true)
 
 if [ -n "$GIT_NAME" ] && [ -n "$GIT_EMAIL" ] && [ -n "$GIT_BRANCH" ]; then
   grn "$GIT_NAME <$GIT_EMAIL>"
-  say  "Branch: $GIT_BRANCH"
+  grn "Branch: $GIT_BRANCH"
 else
   exec 3>&1
   GIT_VALS=$(dialog --clear --title "Git Config" \
@@ -77,7 +77,7 @@ GH_AUTH_STATUS=$(gh auth status 2>&1 || true)
 
 if echo "$GH_AUTH_STATUS" | grep -q "Logged in"; then
   GH_USER=$(echo "$GH_AUTH_STATUS" | grep -oE '[a-zA-Z0-9_-]+ \(' | tr -d ' (' || true)
-  grn "${GH_USER:-?}"
+  grn "  ${GH_USER:-?}"
 else
   exec 3>&1
   GH_TOKEN=$(dialog --clear --title "GitHub Auth" \
