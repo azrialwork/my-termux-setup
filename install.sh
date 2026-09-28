@@ -34,7 +34,7 @@ pkg update -y -qq 2>&1 >/dev/null || true
 
 curl -fsSL -o "$TMP_DIR/packages.txt" "$RAW_BASE/packages.txt"
 pkg install -y -qq $(grep -vE '^\s*(#|$)' "$TMP_DIR/packages.txt") 2>&1 | grep -E '(newest|newly installed|NEW|upgraded)' || true
-grn "✓ paket siap"
+grn "  ✓ paket siap"
 
 # --- 2. git config --------------------------------------------------------
 
@@ -107,4 +107,4 @@ fi
 # --- done ----------------------------------------------------------------
 
 hdr "Selesai"
-grn "Semua langkah siap. Jalankan exec bash untuk memuat ulang shell."
+grn "  Semua langkah siap. Jalankan exec bash untuk memuat ulang shell."
