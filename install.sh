@@ -40,33 +40,36 @@ grn "✓ paket siap"
 
 hdr "Git Config"
 
-GIT_NAME=$(git config --global user.name 2>/dev/null || true)
+GIT_USER=$(git config --global user.name 2>/dev/null || true)
 GIT_EMAIL=$(git config --global user.email 2>/dev/null || true)
 GIT_BRANCH=$(git config --global init.defaultBranch 2>/dev/null || true)
 
-if [ -n "$GIT_NAME" ] && [ -n "$GIT_EMAIL" ] && [ -n "$GIT_BRANCH" ]; then
-  grn "  $GIT_NAME <$GIT_EMAIL>"
+if [ -n "$GIT_USER" ] && [ -n "$GIT_EMAIL" ] && [ -n "$GIT_BRANCH" ]; then
+  grn "  $GIT_USER <$GIT_EMAIL>"
   grn "  Branch: $GIT_BRANCH"
 else
-  exec 3>&1
-  GIT_VALS=$(dialog --clear --title "Git Config" \
-    --form "Isi identitas Git:\n\nGunakan panah ↑↓ untuk pindah field, Tab untuk next, Enter untuk OK." \
-    0 0 0 \
-    "Nama"        1 1 "${GIT_NAME:-}"  1 15 40 0 \
-    "Email"       2 1 "${GIT_EMAIL:-}" 2 15 40 0 \
-    "Branch"      3 1 "${GIT_BRANCH:-main}" 3 15 40 0 \
-    2>&1 1>&3)
-  exec 3>&-
+  while true; do
+    exec 3>&1
+    GIT_VALS=$(dialog --clear --title "Git Config" \
+      --form "Isi identitas Git:\n\nNama, email, dan branch wajib diisi." \
+      0 0 0 \
+      "Nama"        1 1 "${GIT_USER:-}"  1 15 40 0 \
+      "Email"       2 1 "${GIT_EMAIL:-}" 2 15 40 0 \
+      "Branch"      3 1 "${GIT_BRANCH:-main}" 3 15 40 0 \
+      2>&1 1>&3)
+    exec 3>&-
 
-  GIT_NAME=$(echo "$GIT_VALS" | sed -n '1p' | xargs)
-  GIT_EMAIL=$(echo "$GIT_VALS" | sed -n '2p' | xargs)
-  GIT_BRANCH=$(echo "$GIT_VALS" | sed -n '3p' | xargs)
+    GIT_USER=$(echo "$GIT_VALS" | sed -n '1p' | xargs)
+    GIT_EMAIL=$(echo "$GIT_VALS" | sed -n '2p' | xargs)
+    GIT_BRANCH=$(echo "$GIT_VALS" | sed -n '3p' | xargs)
 
-  [ -n "$GIT_NAME" ]   && git config --global user.name "$GIT_NAME"
-  [ -n "$GIT_EMAIL" ]  && git config --global user.email "$GIT_EMAIL"
-  [ -n "$GIT_BRANCH" ] && git config --global init.defaultBranch "$GIT_BRANCH"
-
-  grn "✓ tersimpan"
+    if [ -n "$GIT_USER" ] && [ -n "$GIT_EMAIL" ] && [ -n "$GIT_BRANCH" ]; then
+      git config --global user.name "$GIT_USER"
+      git config --global user.email "$GIT_EMAIL"
+      git config --global init.defaultBranch "$GIT_BRANCH"
+      break
+    fi
+  done
 fi
 
 # --- 3. gh auth -----------------------------------------------------------
@@ -79,17 +82,26 @@ if echo "$GH_AUTH_STATUS" | grep -q "Logged in"; then
   GH_USER=$(echo "$GH_AUTH_STATUS" | grep -oE '[a-zA-Z0-9_-]+ \(' | tr -d ' (' || true)
   grn "  ${GH_USER:-?}"
 else
-  exec 3>&1
-  GH_TOKEN=$(dialog --clear --title "GitHub Auth" \
-    --insecure --passwordbox "\nPaste GitHub Personal Access Token (PAT):\n\nToken tidak akan ditampilkan.\nGunakan Ctrl+Shift+V untuk paste." \
-    0 0 2>&1 1>&3)
-  exec 3>&-
+  while true; do
+    exec 3>&1
+    GH_TOKEN=$(dialog --clear --title "GitHub Auth" \
+      --insecure --passwordbox "\nPaste GitHub Personal Access Token (PAT):\n\nToken tidak akan ditampilkan.\nGunakan Ctrl+Shift+V untuk paste." \
+      0 0 2>&1 1>&3)
+    exec 3>&-
 
-  if [ -n "$GH_TOKEN" ]; then
-    echo "$GH_TOKEN" | gh auth login --with-token 2>/dev/null && grn "✓ login berhasil" || red "✗ login gagal — cek token kamu."
-  else
-    say "⊙ dilewati (token kosong)"
-  fi
+    if [ -z "$GH_TOKEN" ]; then
+      red "Token wajib diisi."
+      continue
+    fi
+
+    if echo "$GH_TOKEN" | gh auth login --with-token 2>/dev/null; then
+      GH_USER=$(gh auth status 2>&1 | grep -oE '[a-zA-Z0-9_-]+ \(' | tr -d ' (' || true)
+      grn "  ${GH_USER:-?}"
+      break
+    fi
+
+    red "Token tidak valid, coba lagi."
+  done
 fi
 
 # --- done ----------------------------------------------------------------
