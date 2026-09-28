@@ -39,7 +39,6 @@ spinner() {
   printf '\r\033[2K'
 }
 
-say "  Updating repos & installing packages..."
 pkg update -y -qq >/dev/null 2>&1 &
 spinner $! "updating repos..."
 
