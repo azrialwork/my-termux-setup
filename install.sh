@@ -76,7 +76,8 @@ hdr "GitHub Auth"
 GH_AUTH_STATUS=$(gh auth status 2>&1 || true)
 
 if echo "$GH_AUTH_STATUS" | grep -q "Logged in"; then
-  grn "✓ sudah login"
+  GH_USER=$(echo "$GH_AUTH_STATUS" | grep -oE '[a-zA-Z0-9_-]+ \(' | tr -d ' (' || true)
+  grn "${GH_USER:-?}"
 else
   exec 3>&1
   GH_TOKEN=$(dialog --clear --title "GitHub Auth" \
