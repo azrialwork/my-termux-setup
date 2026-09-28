@@ -89,7 +89,7 @@ if echo "$GH_AUTH_STATUS" | grep -q "Logged in"; then
   say "  ${GH_USER:-?}"
 else
   while true; do
-    ask "GitHub PAT:" && read -rs GH_TOKEN && printf ' %.0s*' $(seq 1 ${#GH_TOKEN}) && echo
+    ask "GitHub PAT:" && read -r GH_TOKEN
     if [ -z "$GH_TOKEN" ]; then
       red "  Token is required."
       continue
