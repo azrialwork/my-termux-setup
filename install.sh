@@ -1,9 +1,8 @@
 #!/data/data/com.termux/files/usr/bin/env bash
 set -euo pipefail
 
-red()  { printf '\033[0;31m%s\033[0m\n' "$*" >&2; }
-grn()  { printf '\033[0;32m%s\033[0m\n' "$*"; }
-say()  { printf '  %s\n' "$*"; }
+red() { printf '\033[0;31m%s\033[0m\n' "$*" >&2; }
+say() { printf '  %s\n' "$*"; }
 hdr()  { printf '\n\033[1;36m══ %s\033[0m\n' "$*"; }
 
 REPO_URL="https://github.com/azrialwork/my-termux-setup.git"
@@ -48,7 +47,7 @@ curl -fsSL -o "$TMP_DIR/packages.txt" "$RAW_BASE/packages.txt"
 pkg install -y -qq $(grep -vE '^\s*(#|$)' "$TMP_DIR/packages.txt") >/dev/null 2>&1 &
 spinner $! "installing packages..."
 
-grn "  ✓ packages ready"
+say "  ✓ packages ready"
 
 # --- 2. git config --------------------------------------------------------
 
@@ -59,8 +58,8 @@ GIT_EMAIL=$(git config --global user.email 2>/dev/null || true)
 GIT_BRANCH=$(git config --global init.defaultBranch 2>/dev/null || true)
 
 if [ -n "$GIT_USER" ] && [ -n "$GIT_EMAIL" ] && [ -n "$GIT_BRANCH" ]; then
-  grn "  $GIT_USER <$GIT_EMAIL>"
-  grn "  Branch: $GIT_BRANCH"
+  say "  $GIT_USER <$GIT_EMAIL>"
+  say "  Branch: $GIT_BRANCH"
 else
   while true; do
     exec 3>&1
@@ -94,7 +93,7 @@ GH_AUTH_STATUS=$(gh auth status 2>&1 || true)
 
 if echo "$GH_AUTH_STATUS" | grep -q "Logged in"; then
   GH_USER=$(echo "$GH_AUTH_STATUS" | grep -oE '[a-zA-Z0-9_-]+ \(' | tr -d ' (' || true)
-  grn "  ${GH_USER:-?}"
+  say "  ${GH_USER:-?}"
 else
   while true; do
     exec 3>&1
@@ -110,7 +109,7 @@ else
 
     if echo "$GH_TOKEN" | gh auth login --with-token 2>/dev/null; then
       GH_USER=$(gh auth status 2>&1 | grep -oE '[a-zA-Z0-9_-]+ \(' | tr -d ' (' || true)
-      grn "  ${GH_USER:-?}"
+      say "  ${GH_USER:-?}"
       break
     fi
 
@@ -121,4 +120,4 @@ fi
 # --- done ----------------------------------------------------------------
 
 hdr "Done"
-grn "  All steps complete. Restart Termux or run exec bash to reload."
+say "  All steps complete. Restart Termux or run exec bash to reload."
