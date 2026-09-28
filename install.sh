@@ -12,13 +12,13 @@ RAW_BASE="https://raw.githubusercontent.com/azrialwork/my-termux-setup/main"
 # --- sanity ---------------------------------------------------------------
 
 if [ -z "${PREFIX:-}" ] || [ ! -d "$PREFIX" ]; then
-  red "Harus dijalankan di dalam Termux."
+  red "Must be run inside Termux."
   exit 1
 fi
 
 ARCH="$(uname -m)"
 if [ "$ARCH" != "aarch64" ]; then
-  red "Hanya mendukung aarch64, terdeteksi: $ARCH"
+  red "Only aarch64 is supported, detected: $ARCH"
   exit 1
 fi
 
@@ -27,14 +27,14 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 
 # --- 1. packages ----------------------------------------------------------
 
-hdr "Paket"
+hdr "Packages"
 
 pkg update -y -qq 2>&1 | grep -E '^[^*]' || true
 pkg update -y -qq 2>&1 >/dev/null || true
 
 curl -fsSL -o "$TMP_DIR/packages.txt" "$RAW_BASE/packages.txt"
 pkg install -y -qq $(grep -vE '^\s*(#|$)' "$TMP_DIR/packages.txt") 2>&1 | grep -E '(newest|newly installed|NEW|upgraded)' || true
-grn "  ✓ paket siap"
+grn "  ✓ packages ready"
 
 # --- 2. git config --------------------------------------------------------
 
@@ -51,9 +51,9 @@ else
   while true; do
     exec 3>&1
     GIT_VALS=$(dialog --clear --title "Git Config" \
-      --form "Isi identitas Git:\n\nNama, email, dan branch wajib diisi." \
+      --form "Enter your Git identity:\n\nName, email, and branch are required." \
       0 0 0 \
-      "Nama"        1 1 "${GIT_USER:-}"  1 15 40 0 \
+      "Name"        1 1 "${GIT_USER:-}"  1 15 40 0 \
       "Email"       2 1 "${GIT_EMAIL:-}" 2 15 40 0 \
       "Branch"      3 1 "${GIT_BRANCH:-main}" 3 15 40 0 \
       2>&1 1>&3)
@@ -85,12 +85,12 @@ else
   while true; do
     exec 3>&1
     GH_TOKEN=$(dialog --clear --title "GitHub Auth" \
-      --insecure --passwordbox "\nPaste GitHub Personal Access Token (PAT):\n\nToken tidak akan ditampilkan.\nGunakan Ctrl+Shift+V untuk paste." \
+      --insecure --passwordbox "\nPaste your GitHub Personal Access Token (PAT):\n\nToken will not be displayed.\nUse Ctrl+Shift+V to paste." \
       0 0 2>&1 1>&3)
     exec 3>&-
 
     if [ -z "$GH_TOKEN" ]; then
-      red "Token wajib diisi."
+      red "Token is required."
       continue
     fi
 
@@ -100,11 +100,11 @@ else
       break
     fi
 
-    red "Token tidak valid, coba lagi."
+    red "Invalid token, try again."
   done
 fi
 
 # --- done ----------------------------------------------------------------
 
-hdr "Selesai"
-grn "  Semua langkah siap. Jalankan exec bash untuk memuat ulang shell."
+hdr "Done"
+grn "  All steps complete. Restart Termux or run exec bash to reload."
