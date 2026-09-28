@@ -29,11 +29,25 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 
 hdr "Packages"
 
-pkg update -y -qq 2>&1 | grep -E '^[^*]' || true
-pkg update -y -qq 2>&1 >/dev/null || true
+spinner() {
+  local pid=$1 msg=$2 delay=0.1 chars='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+  while kill -0 "$pid" 2>/dev/null; do
+    for ((i=0;i<${#chars};i++)); do
+      printf '\r  %s %s' "${chars:$i:1}" "$msg"
+      sleep "$delay"
+    done
+  done
+  printf '\r\033[2K'
+}
+
+say "  Updating repos & installing packages..."
+pkg update -y -qq >/dev/null 2>&1 &
+spinner $! "updating repos..."
 
 curl -fsSL -o "$TMP_DIR/packages.txt" "$RAW_BASE/packages.txt"
-pkg install -y -qq $(grep -vE '^\s*(#|$)' "$TMP_DIR/packages.txt") 2>&1 | grep -E '(newest|newly installed|NEW|upgraded)' || true
+pkg install -y -qq $(grep -vE '^\s*(#|$)' "$TMP_DIR/packages.txt") >/dev/null 2>&1 &
+spinner $! "installing packages..."
+
 grn "  ✓ packages ready"
 
 # --- 2. git config --------------------------------------------------------
