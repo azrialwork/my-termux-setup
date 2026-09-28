@@ -4,6 +4,7 @@ set -euo pipefail
 red()  { printf '\033[0;31m%s\033[0m\n' "$*" >&2; }
 grn()  { printf '\033[0;32m%s\033[0m\n' "$*"; }
 say()  { printf '  %s\n' "$*"; }
+hdr()  { printf '\n\033[1;36m══ %s\033[0m\n' "$*"; }
 
 REPO_URL="https://github.com/azrialwork/my-termux-setup.git"
 RAW_BASE="https://raw.githubusercontent.com/azrialwork/my-termux-setup/main"
@@ -26,21 +27,25 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 
 # --- 1. packages ----------------------------------------------------------
 
-say "Update repositori paket..."
-pkg update -y
+hdr "Paket"
 
-say "Download packages.txt & install..."
+pkg update -y -qq 2>&1 | grep -E '^[^*]' || true
+pkg update -y -qq 2>&1 >/dev/null || true
+
 curl -fsSL -o "$TMP_DIR/packages.txt" "$RAW_BASE/packages.txt"
-pkg install -y $(grep -vE '^\s*(#|$)' "$TMP_DIR/packages.txt")
+pkg install -y -qq $(grep -vE '^\s*(#|$)' "$TMP_DIR/packages.txt") 2>&1 | grep -E '(newest|newly installed|NEW|upgraded)' || true
+grn "✓ paket siap"
 
 # --- 2. git config --------------------------------------------------------
+
+hdr "Git Config"
 
 GIT_NAME=$(git config --global user.name 2>/dev/null || true)
 GIT_EMAIL=$(git config --global user.email 2>/dev/null || true)
 GIT_BRANCH=$(git config --global init.defaultBranch 2>/dev/null || true)
 
 if [ -n "$GIT_NAME" ] && [ -n "$GIT_EMAIL" ] && [ -n "$GIT_BRANCH" ]; then
-  grn "Git sudah terkonfigurasi: $GIT_NAME / $GIT_EMAIL / $GIT_BRANCH (skip)"
+  grn "✓ sudah ada  —  $GIT_NAME <$GIT_EMAIL>  ·  default: $GIT_BRANCH"
 else
   exec 3>&1
   GIT_VALS=$(dialog --clear --title "Git Config" \
@@ -60,15 +65,17 @@ else
   [ -n "$GIT_EMAIL" ]  && git config --global user.email "$GIT_EMAIL"
   [ -n "$GIT_BRANCH" ] && git config --global init.defaultBranch "$GIT_BRANCH"
 
-  grn "Git config: $(git config --global user.name 2>/dev/null || echo '-') / $(git config --global user.email 2>/dev/null || echo '-') / $(git config --global init.defaultBranch 2>/dev/null || echo '-')"
+  grn "✓ tersimpan"
 fi
 
 # --- 3. gh auth -----------------------------------------------------------
 
+hdr "GitHub Auth"
+
 GH_AUTH_STATUS=$(gh auth status 2>&1 || true)
 
 if echo "$GH_AUTH_STATUS" | grep -q "Logged in"; then
-  grn "gh sudah login. (skip)"
+  grn "✓ sudah login"
 else
   exec 3>&1
   GH_TOKEN=$(dialog --clear --title "GitHub Auth" \
@@ -77,12 +84,13 @@ else
   exec 3>&-
 
   if [ -n "$GH_TOKEN" ]; then
-    echo "$GH_TOKEN" | gh auth login --with-token 2>/dev/null && grn "gh auth berhasil." || red "gh auth gagal — cek token kamu."
+    echo "$GH_TOKEN" | gh auth login --with-token 2>/dev/null && grn "✓ login berhasil" || red "✗ login gagal — cek token kamu."
   else
-    say "gh auth dilewati (token kosong)."
+    say "⊙ dilewati (token kosong)"
   fi
 fi
 
 # --- done ----------------------------------------------------------------
 
-grn "Setup selesai."
+hdr "Selesai"
+grn "Semua langkah siap. Jalankan exec bash untuk memuat ulang shell."
