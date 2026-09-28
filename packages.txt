@@ -1,0 +1,10 @@
+which
+ripgrep
+unzip
+zip
+git
+gh
+bun
+jq
+dialog
+curl
