@@ -3,7 +3,8 @@ set -euo pipefail
 
 red() { printf '\033[0;31m%s\033[0m\n' "$*" >&2; }
 say() { printf '  %s\n' "$*"; }
-hdr()  { printf '\n\033[1;36m══ %s\033[0m\n' "$*"; }
+ask() { printf '  \033[0;36m%s\033[0m ' "$*"; }
+hdr() { printf '\n\033[1;36m══ %s\033[0m\n' "$*"; }
 
 REPO_URL="https://github.com/azrialwork/my-termux-setup.git"
 RAW_BASE="https://raw.githubusercontent.com/azrialwork/my-termux-setup/main"
@@ -61,26 +62,19 @@ if [ -n "$GIT_USER" ] && [ -n "$GIT_EMAIL" ] && [ -n "$GIT_BRANCH" ]; then
   say "  Branch: $GIT_BRANCH"
 else
   while true; do
-    exec 3>&1
-    GIT_VALS=$(dialog --clear --title "Git Config" \
-      --form "Enter your Git identity:\n\nName, email, and branch are required." \
-      0 0 0 \
-      "Name"        1 1 "${GIT_USER:-}"  1 15 40 0 \
-      "Email"       2 1 "${GIT_EMAIL:-}" 2 15 40 0 \
-      "Branch"      3 1 "${GIT_BRANCH:-main}" 3 15 40 0 \
-      2>&1 1>&3)
-    exec 3>&-
-
-    GIT_USER=$(echo "$GIT_VALS" | sed -n '1p' | xargs)
-    GIT_EMAIL=$(echo "$GIT_VALS" | sed -n '2p' | xargs)
-    GIT_BRANCH=$(echo "$GIT_VALS" | sed -n '3p' | xargs)
+    ask "Name   [$GIT_USER]:" && read -r input && GIT_USER="${input:-$GIT_USER}"
+    ask "Email  [$GIT_EMAIL]:" && read -r input && GIT_EMAIL="${input:-$GIT_EMAIL}"
+    ask "Branch [$GIT_BRANCH]:" && read -r input && GIT_BRANCH="${input:-${GIT_BRANCH:-main}}"
+    echo
 
     if [ -n "$GIT_USER" ] && [ -n "$GIT_EMAIL" ] && [ -n "$GIT_BRANCH" ]; then
       git config --global user.name "$GIT_USER"
       git config --global user.email "$GIT_EMAIL"
       git config --global init.defaultBranch "$GIT_BRANCH"
+      say "  ✓ config saved"
       break
     fi
+    red "  All fields are required."
   done
 fi
 
@@ -95,24 +89,17 @@ if echo "$GH_AUTH_STATUS" | grep -q "Logged in"; then
   say "  ${GH_USER:-?}"
 else
   while true; do
-    exec 3>&1
-    GH_TOKEN=$(dialog --clear --title "GitHub Auth" \
-      --insecure --passwordbox "\nPaste your GitHub Personal Access Token (PAT):\n\nToken will not be displayed.\nUse Ctrl+Shift+V to paste." \
-      0 0 2>&1 1>&3)
-    exec 3>&-
-
+    ask "Paste GitHub PAT:" && read -rs GH_TOKEN && echo
     if [ -z "$GH_TOKEN" ]; then
-      red "Token is required."
+      red "  Token is required."
       continue
     fi
-
     if echo "$GH_TOKEN" | gh auth login --with-token 2>/dev/null; then
       GH_USER=$(gh auth status 2>&1 | grep -oE '[a-zA-Z0-9_-]+ \(' | tr -d ' (' || true)
       say "  ${GH_USER:-?}"
       break
     fi
-
-    red "Invalid token, try again."
+    red "  Invalid token, try again."
   done
 fi
 
